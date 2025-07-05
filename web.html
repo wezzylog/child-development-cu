@@ -766,6 +766,237 @@
         </div>
     </div>
 
+    <div id="services" class="page">
+    <div class="hero">
+        <div class="hero-content">
+            <h1>Our Services</h1>
+            <p>Comprehensive Child Development Solutions</p>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="section">
+            <h2>Documentation & Support</h2>
+            <p>This documentation provides comprehensive information about the Child Development Cube project, including its technical specifications, implementation details, and user guidelines. Whether you're a developer, educator, or parent, you'll find detailed information about all aspects of the project.</p>
+        </div>
+
+        <div class="section">
+            <h2>Core Services</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h4>Interactive Learning</h4>
+                    <p>Multi-sensory learning experiences combining tactile, visual, and audio feedback to enhance cognitive development.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Emotional Development</h4>
+                    <p>Supporting emotional intelligence and self-regulation through engaging interactive activities.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Social Skills Enhancement</h4>
+                    <p>Multiplayer games and collaborative activities that build communication and teamwork skills.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Cognitive Stimulation</h4>
+                    <p>Progressive difficulty levels that challenge and develop problem-solving abilities and memory skills.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Expert Guidance</h4>
+                    <p>Professional support and guidance based on latest research in child development psychology.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Supportive Parenting Approach</h4>
+                    <p>Resources and tools to help parents support their child's developmental journey at home.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Technical Specifications</h2>
+            <h3>Hardware Features</h3>
+            <p>• ESP32 microcontroller for advanced processing</p>
+            <p>• 5 colored LED panels with tactile feedback</p>
+            <p>• LCD touchscreen interface</p>
+            <p>• Audio module with clear sound output</p>
+            <p>• Rechargeable battery system</p>
+            <p>• Durable, child-safe materials</p>
+
+            <h3>Software Capabilities</h3>
+            <p>• Multiple game modes and difficulty levels</p>
+            <p>• Progress tracking and adaptive learning</p>
+            <p>• Mathematical games and puzzles</p>
+            <p>• Memory and sequence training</p>
+            <p>• Audio-visual feedback system</p>
+        </div>
+
+        <!-- STL Viewer Section -->
+        <div class="section">
+            <h2>3D Model Viewer</h2>
+            <div id="stl-viewer" style="width: 100%; height: 500px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Include Three.js and STL Loader -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://threejs.org/examples/js/loaders/STLLoader.js"></script>
+
+<script>
+    // Initialize the scene
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf0f0f0); // Light gray background
+
+    // Get the container dimensions
+    const container = document.getElementById('stl-viewer');
+    const containerWidth = container.clientWidth;
+    const containerHeight = 500;
+
+    const camera = new THREE.PerspectiveCamera(75, containerWidth / containerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(containerWidth, containerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    // Add lighting setup
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.6); // Soft ambient light
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(10, 10, 5);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
+    scene.add(directionalLight);
+
+    // Add a secondary light for better illumination
+    const pointLight = new THREE.PointLight(0xffffff, 0.5, 100);
+    pointLight.position.set(-10, -10, 10);
+    scene.add(pointLight);
+
+    // Variables for model and controls
+    let model = null;
+    let isLoading = true;
+
+    // Create loading indicator
+    const loadingDiv = document.createElement('div');
+    loadingDiv.innerHTML = 'Loading 3D Model...';
+    loadingDiv.style.position = 'absolute';
+    loadingDiv.style.top = '50%';
+    loadingDiv.style.left = '50%';
+    loadingDiv.style.transform = 'translate(-50%, -50%)';
+    loadingDiv.style.color = '#666';
+    loadingDiv.style.fontSize = '16px';
+    container.style.position = 'relative';
+    container.appendChild(loadingDiv);
+
+    // Load the STL model
+    const loader = new THREE.STLLoader();
+    loader.load('3d model/Final-project-mockup_1.stl',
+        function (geometry) {
+            // Success callback
+            const material = new THREE.MeshPhongMaterial({
+                color: 0x00ff00,
+                shininess: 100,
+                specular: 0x111111
+            });
+
+            model = new THREE.Mesh(geometry, material);
+            model.castShadow = true;
+            model.receiveShadow = true;
+
+            // Center the model
+            geometry.computeBoundingBox();
+            const center = geometry.boundingBox.getCenter(new THREE.Vector3());
+            model.position.sub(center);
+
+            // Scale the model to fit nicely in view
+            const size = geometry.boundingBox.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const scale = 3 / maxDim;
+            model.scale.multiplyScalar(scale);
+
+            scene.add(model);
+
+            // Position camera
+            camera.position.set(5, 5, 5);
+            camera.lookAt(0, 0, 0);
+
+            // Remove loading indicator
+            container.removeChild(loadingDiv);
+            isLoading = false;
+        },
+        function (progress) {
+            // Progress callback
+            const percentComplete = (progress.loaded / progress.total) * 100;
+            loadingDiv.innerHTML = `Loading 3D Model... ${Math.round(percentComplete)}%`;
+        },
+        function (error) {
+            // Error callback
+            console.error('An error happened while loading the STL file:', error);
+            loadingDiv.innerHTML = 'Error loading 3D model. Please check the file path.';
+            loadingDiv.style.color = '#ff0000';
+            isLoading = false;
+        }
+    );
+
+    // Mouse interaction variables
+    let mouseX = 0, mouseY = 0;
+    let isMouseDown = false;
+
+    // Add mouse controls
+    container.addEventListener('mousedown', (event) => {
+        isMouseDown = true;
+        mouseX = event.clientX;
+        mouseY = event.clientY;
+    });
+
+    container.addEventListener('mouseup', () => {
+        isMouseDown = false;
+    });
+
+    container.addEventListener('mousemove', (event) => {
+        if (!isMouseDown || !model) return;
+
+        const deltaX = event.clientX - mouseX;
+        const deltaY = event.clientY - mouseY;
+
+        model.rotation.y += deltaX * 0.01;
+        model.rotation.x += deltaY * 0.01;
+
+        mouseX = event.clientX;
+        mouseY = event.clientY;
+    });
+
+    // Add zoom with mouse wheel
+    container.addEventListener('wheel', (event) => {
+        event.preventDefault();
+        camera.position.z += event.deltaY * 0.01;
+        camera.position.z = Math.max(2, Math.min(20, camera.position.z)); // Limit zoom
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        const newWidth = container.clientWidth;
+        camera.aspect = newWidth / containerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(newWidth, containerHeight);
+    });
+
+    // Animation loop
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // Auto-rotate the model slowly when not interacting
+        if (model && !isMouseDown) {
+            model.rotation.y += 0.005;
+        }
+
+        renderer.render(scene, camera);
+    }
+
+    animate();
+</script>
+
     <!-- Services Page -->
     <div id="services" class="page">
         <div class="hero">
